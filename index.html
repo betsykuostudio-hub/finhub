@@ -289,7 +289,7 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
     </div>
   </div>
   <div class="card"><div class="card-head"><div class="card-title">危險區域</div></div><button class="btn btn-r" onclick="clearAll()">🗑️ 清除全部資料</button></div>
-  <div class="card"><div class="card-head"><div class="card-title">關於</div></div><p style="font-size:12px;color:var(--t2);line-height:2">fin.hub v4.0 ｜ 損益顏色：台灣習慣（🔴紅=漲/正 🟢綠=跌/負）｜ 幣別：手動匯率自動換算 TWD ｜ 資料：100% 本機離線</p></div>
+  <div class="card"><div class="card-head"><div class="card-title">關於</div></div><p style="font-size:12px;color:var(--t2);line-height:2">fin.hub v4.1 ｜ 損益顏色：台灣習慣（🔴紅=漲/正 🟢綠=跌/負）｜ 幣別：手動匯率自動換算 TWD ｜ 資料：100% 本機離線</p></div>
 </div>
 
 <!-- MODALS -->
@@ -311,13 +311,15 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
 
 <div class="modal-bg" id="mt"><div class="modal">
   <div class="modal-title" id="mt-t">新增交易紀錄 <button class="mc" onclick="closeM('mt')">✕</button></div>
+  <div style="font-size:11px;color:var(--accent);background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.15);border-radius:7px;padding:6px 10px;margin-bottom:10px">💡 新增後自動更新持倉股數與加權成本</div>
   <div class="fg fg2">
-    <div class="field"><label>代碼</label><input id="t-code" list="cl"></div>
+    <div class="field"><label>代碼</label><input id="t-code" list="cl" oninput="prefillTX(this.value)"></div>
     <div class="field"><label>類型</label><select id="t-type"><option value="buy">買入</option><option value="sell">賣出</option></select></div>
     <div class="field"><label>日期</label><input type="date" id="t-date"></div>
     <div class="field"><label>股數</label><input type="number" id="t-sh" step="0.001"></div>
     <div class="field"><label>成交價（原幣）</label><input type="number" id="t-price" step="0.01"></div>
     <div class="field"><label>手續費＋稅</label><input type="number" id="t-fee" placeholder="0"></div>
+    <div class="field"><label>幣別</label><select id="t-cur"><option value="TWD">TWD</option><option value="USD">USD</option><option value="HKD">HKD</option><option value="JPY">JPY</option><option value="EUR">EUR</option></select></div>
     <div class="field ff"><label>備註</label><input id="t-note"></div>
   </div>
   <div class="btn-row"><button class="btn btn-p" id="t-btn" onclick="submitTX()">新增</button><button class="btn btn-g" onclick="closeM('mt')">取消</button></div>
@@ -557,10 +559,44 @@ function openTxSel(){if(!selH)return;const h=H.find(x=>x.id===selH);if(!h)return
 
 // TRANSACTIONS
 function submitTX(){if(eTXid)saveETX();else addTX();}
+function prefillTX(code){
+  const h=H.find(x=>x.code===code.trim());
+  if(h&&document.getElementById('t-cur'))document.getElementById('t-cur').value=h.currency||'TWD';
+}
+function syncHolding(code,type,shares,price,fee,currency){
+  const idx=H.findIndex(x=>x.code===code);
+  if(idx<0){
+    // 自動建立新持倉
+    H.push({id:uid(),code,name:code,type:'stock',platform:'other',
+      shares:type==='buy'?shares:0,
+      cost:type==='buy'?price:0,
+      price,currency:currency||'TWD',note:'由交易紀錄自動建立',updatedAt:td()});
+    toast('📋 已自動建立持倉：'+code);
+  } else {
+    const h=H[idx];
+    if(type==='buy'){
+      const oldVal=h.shares*h.cost;
+      const addVal=shares*price+(fee||0);
+      const newShares=h.shares+shares;
+      h.cost=newShares>0?(oldVal+addVal)/newShares:0;
+      h.shares=newShares;
+    } else {
+      h.shares=Math.max(0,h.shares-shares);
+    }
+    h.updatedAt=td();
+  }
+  sv(K.h,H);
+}
 function addTX(){
   const code=V('t-code').trim();if(!code){toast('請輸入代碼');return;}
-  TX.push({id:uid(),code,type:V('t-type'),date:V('t-date'),shares:+V('t-sh')||0,price:+V('t-price')||0,fee:+V('t-fee')||0,note:V('t-note')});
-  TX.sort((a,b)=>b.date.localeCompare(a.date));sv(K.tx,TX);closeM('mt');renderTX();renderH();toast('✅ 交易已記錄');
+  const type=V('t-type'),shares=+V('t-sh')||0,price=+V('t-price')||0,fee=+V('t-fee')||0;
+  TX.push({id:uid(),code,type,date:V('t-date'),shares,price,fee,note:V('t-note')});
+  TX.sort((a,b)=>b.date.localeCompare(a.date));sv(K.tx,TX);
+  // 自動同步持倉
+  const txCur=V('t-cur')||'TWD';
+  syncHolding(code,type,shares,price,fee,txCur);
+  closeM('mt');renderTX();renderH();renderOV();
+  toast(type==='buy'?'✅ 買入已記錄，持倉已更新':'✅ 賣出已記錄，持倉已更新');
   ['t-code','t-sh','t-price','t-fee','t-note'].forEach(id=>S(id,''));
 }
 function openETX(id){
@@ -568,12 +604,38 @@ function openETX(id){
   S('t-code',t.code);E('t-type').value=t.type;S('t-date',t.date);S('t-sh',t.shares);S('t-price',t.price);S('t-fee',t.fee||0);S('t-note',t.note||'');
   E('mt-t').innerHTML='編輯交易紀錄 <button class="mc" onclick="closeM(\'mt\')">✕</button>';E('t-btn').textContent='儲存';openM('mt');
 }
+function recalcHoldingFromTX(code){
+  // 從所有交易紀錄重新計算持倉
+  const trades=TX.filter(t=>t.code===code).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  if(!trades.length)return;
+  let sh=0,cost=0;
+  for(const t of trades){
+    if(t.type==='buy'){
+      const oldVal=sh*cost,addVal=t.shares*t.price+(t.fee||0);
+      sh+=t.shares;cost=sh>0?(oldVal+addVal)/sh:0;
+    } else {
+      sh=Math.max(0,sh-t.shares);
+    }
+  }
+  const idx=H.findIndex(x=>x.code===code);
+  if(idx>=0){H[idx].shares=sh;H[idx].cost=cost;H[idx].updatedAt=td();}
+  sv(K.h,H);
+}
 function saveETX(){
   const idx=TX.findIndex(x=>x.id===eTXid);if(idx<0)return;
+  const oldCode=TX[idx].code;
   TX[idx]={...TX[idx],code:V('t-code').trim(),type:V('t-type'),date:V('t-date'),shares:+V('t-sh')||0,price:+V('t-price')||0,fee:+V('t-fee')||0,note:V('t-note')};
-  TX.sort((a,b)=>b.date.localeCompare(a.date));sv(K.tx,TX);closeM('mt');renderTX();renderH();toast('✅ 已更新');
+  TX.sort((a,b)=>b.date.localeCompare(a.date));sv(K.tx,TX);
+  recalcHoldingFromTX(TX[idx].code);
+  if(oldCode!==TX[idx].code)recalcHoldingFromTX(oldCode);
+  closeM('mt');renderTX();renderH();renderOV();toast('✅ 已更新，持倉已重算');
 }
-function delTX(id){TX=TX.filter(x=>x.id!==id);sv(K.tx,TX);renderTX();renderH();toast('🗑️ 已刪除');}
+function delTX(id){
+  const t=TX.find(x=>x.id===id);
+  TX=TX.filter(x=>x.id!==id);sv(K.tx,TX);
+  if(t)recalcHoldingFromTX(t.code);
+  renderTX();renderH();renderOV();toast('🗑️ 已刪除，持倉已重算');
+}
 function renderTX(filter){
   const q=(filter||V('txs')).toLowerCase();
   const el=E('txl');
