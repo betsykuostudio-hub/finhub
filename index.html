@@ -240,7 +240,13 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
 
 <div class="page" id="page-invest">
   <div class="fx-bar">匯率：USD<input class="fx-input" id="fx-usd" value="32.5" oninput="saveFX()">元 | JPY<input class="fx-input" id="fx-jpy" value="0.21" oninput="saveFX()">元 | HKD<input class="fx-input" id="fx-hkd" value="4.15" oninput="saveFX()">元 | EUR<input class="fx-input" id="fx-eur" value="35.5" oninput="saveFX()">元</div>
-  <div class="sec"><div><h2>📈 持倉管理</h2></div><button class="btn btn-p btn-sm" onclick="openM('mh')">＋ 新增</button></div>
+  <div class="sec"><div><h2>📈 持倉管理</h2></div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <button class="btn btn-y btn-sm" onclick="syncGS()" id="gs-btn">☁️ 同步現價</button>
+    <button class="btn btn-g btn-sm" onclick="openBatchPrice()">✏️ 批次輸入</button>
+    <button class="btn btn-p btn-sm" onclick="openM('mh')">＋ 新增</button>
+  </div>
+</div>
   <div class="card" style="padding:12px">
     <div class="sb"><input class="si2" placeholder="搜尋代碼或名稱…" oninput="renderH(this.value)" id="hs"></div>
     <div id="ht"></div>
@@ -280,6 +286,16 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
 
 <div class="page" id="page-settings">
   <div class="card">
+    <div class="card-head"><div class="card-title">☁️ Google Sheets 現價同步</div></div>
+    <p style="font-size:13px;color:var(--t2);line-height:1.8;margin-bottom:12px">填入 Apps Script 部署網址，即可一鍵同步台股現價。</p>
+    <div class="field" style="margin-bottom:10px"><label>Apps Script 網址</label><input id="gs-url" placeholder="https://script.google.com/macros/s/xxxxx/exec" style="font-size:12px"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-p" onclick="saveGS()">💾 儲存網址</button>
+      <button class="btn btn-g" onclick="testGS()">🔗 測試連線</button>
+    </div>
+    <div id="gs-status" style="margin-top:8px;font-size:12px"></div>
+  </div>
+  <div class="card">
     <div class="card-head"><div class="card-title">資料備份</div></div>
     <div id="lbi" style="font-size:12px;color:var(--t2);margin-bottom:10px"></div>
     <p style="font-size:12px;color:var(--t2);line-height:1.8;margin-bottom:12px">所有資料儲存於此裝置瀏覽器，不上傳伺服器。換裝置前請先匯出 JSON。</p>
@@ -289,7 +305,7 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
     </div>
   </div>
   <div class="card"><div class="card-head"><div class="card-title">危險區域</div></div><button class="btn btn-r" onclick="clearAll()">🗑️ 清除全部資料</button></div>
-  <div class="card"><div class="card-head"><div class="card-title">關於</div></div><p style="font-size:12px;color:var(--t2);line-height:2">fin.hub v4.1 ｜ 損益顏色：台灣習慣（🔴紅=漲/正 🟢綠=跌/負）｜ 幣別：手動匯率自動換算 TWD ｜ 資料：100% 本機離線</p></div>
+  <div class="card"><div class="card-head"><div class="card-title">關於</div></div><p style="font-size:12px;color:var(--t2);line-height:2">fin.hub v4.2 ｜ 損益顏色：台灣習慣（🔴紅=漲/正 🟢綠=跌/負）｜ 幣別：手動匯率自動換算 TWD ｜ 資料：100% 本機離線</p></div>
 </div>
 
 <!-- MODALS -->
@@ -373,10 +389,23 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
 </div></div>
 
 <datalist id="cl"></datalist>
+
+<!-- 批次更新現價 Modal -->
+<div class="modal-bg" id="mbp"><div class="modal" style="max-height:92vh">
+  <div class="modal-title">💹 批次更新現價 <button class="mc" onclick="closeM('mbp')">✕</button></div>
+  <div style="font-size:12px;color:var(--t2);margin-bottom:10px;line-height:1.7">
+    🟢 已由 Google Sheets 自動同步 ｜ ⬜ 請手動輸入
+  </div>
+  <div id="bp-list"></div>
+  <div class="btn-row" style="margin-top:14px">
+    <button class="btn btn-p" onclick="saveBatchPrice()">✅ 儲存全部</button>
+    <button class="btn btn-g" onclick="closeM('mbp')">取消</button>
+  </div>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
-const K={h:'f3h',tx:'f3tx',d:'f3d',dca:'f3dca',l:'f3l',fx:'f3fx',bk:'f3bk'};
+const K={h:'f3h',tx:'f3tx',d:'f3d',dca:'f3dca',l:'f3l',fx:'f3fx',bk:'f3bk',gs:'f3gs'};
 const load=k=>{try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}};
 const loadO=k=>{try{return JSON.parse(localStorage.getItem(k)||'{}')}catch(e){return{}}};
 const sv=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
@@ -402,7 +431,7 @@ function goTab(id,btn){
   if(id==='overview')renderOV();
   if(id==='invest'){loadFX();renderH();renderTX();renderD();renderDCA();}
   if(id==='loan'){renderL();renderPS();}
-  if(id==='settings')renderBI();
+  if(id==='settings'){renderBI();loadGSUrl();}
 }
 
 function openM(id){
@@ -903,6 +932,11 @@ function renderBB(){
   if(!lb){el.innerHTML='<div class="backup-banner"><span>💾 尚未備份，建議匯出 JSON</span><button onclick="expData()">立即備份</button></div>';return;}
   const days=Math.floor((Date.now()-new Date(lb).getTime())/86400000);
   el.innerHTML=days>=30?`<div class="backup-banner"><span>⚠️ 距上次備份 ${days} 天</span><button onclick="expData()">立即備份</button></div>`:'';
+}
+function loadGSUrl(){
+  const url=localStorage.getItem(K.gs)||'';
+  S('gs-url',url);
+  if(url)E('gs-status').innerHTML='<span style="color:var(--dn)">✅ 已設定</span>';
 }
 function renderBI(){
   const el=E('lbi'),lb=localStorage.getItem(K.bk);
