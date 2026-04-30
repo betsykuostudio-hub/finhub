@@ -933,11 +933,6 @@ function renderBB(){
   const days=Math.floor((Date.now()-new Date(lb).getTime())/86400000);
   el.innerHTML=days>=30?`<div class="backup-banner"><span>⚠️ 距上次備份 ${days} 天</span><button onclick="expData()">立即備份</button></div>`:'';
 }
-function loadGSUrl(){
-  const url=localStorage.getItem(K.gs)||'';
-  S('gs-url',url);
-  if(url)E('gs-status').innerHTML='<span style="color:var(--dn)">✅ 已設定</span>';
-}
 function renderBI(){
   const el=E('lbi'),lb=localStorage.getItem(K.bk);
   if(!lb){el.innerHTML='<span style="color:var(--yellow)">⚠️ 尚未備份過，建議立即匯出</span>';return;}
@@ -994,6 +989,95 @@ function clearAll(){
   if(!confirm('⚠️ 確定清除所有資料？'))return;
   H=[];TX=[];D=[];DCA=[];L=[];Object.values(K).forEach(k=>localStorage.removeItem(k));
   renderOV();renderH();renderTX();renderD();renderDCA();renderL();renderPS();toast('🗑️ 已清除');
+}
+
+// ===== GOOGLE SHEETS SYNC =====
+function saveGS(){
+  const url=V('gs-url').trim();
+  if(!url){toast('請輸入網址');return;}
+  localStorage.setItem(K.gs,url);
+  toast('✅ 網址已儲存');
+  const el=E('gs-status');if(el)el.innerHTML='<span style="color:var(--dn)">✅ 已儲存</span>';
+}
+function testGS(){
+  const url=localStorage.getItem(K.gs);
+  if(!url){toast('請先儲存 Apps Script 網址');return;}
+  const el=E('gs-status');if(el)el.innerHTML='<span style="color:var(--accent)">⏳ 測試中…</span>';
+  fetch(url)
+    .then(r=>r.json())
+    .then(data=>{
+      const count=Object.keys(data).length;
+      if(el)el.innerHTML=`<span style="color:var(--dn)">✅ 連線成功，取得 ${count} 筆資料</span>`;
+      toast(`✅ 連線成功！取得 ${count} 筆現價`);
+    })
+    .catch(()=>{
+      if(el)el.innerHTML='<span style="color:var(--up)">❌ 連線失敗，請確認網址與部署設定</span>';
+      toast('❌ 連線失敗');
+    });
+}
+function syncGS(){
+  const url=localStorage.getItem(K.gs);
+  if(!url){toast('請先在設定頁填入 Apps Script 網址');return;}
+  const btn=E('gs-btn');if(btn){btn.textContent='⏳ 同步中…';btn.disabled=true;}
+  fetch(url)
+    .then(r=>r.json())
+    .then(data=>{
+      let updated=0;
+      H.forEach(h=>{
+        const key=Object.keys(data).find(k=>k.toUpperCase()===h.code.toUpperCase());
+        if(key&&data[key]){h.price=+data[key];h.updatedAt=td();updated++;}
+      });
+      sv(K.h,H);renderH();renderOV();
+      if(btn){btn.textContent='☁️ 同步現價';btn.disabled=false;}
+      toast(`✅ 已更新 ${updated} 檔現價`);
+    })
+    .catch(()=>{
+      if(btn){btn.textContent='☁️ 同步現價';btn.disabled=false;}
+      toast('❌ 同步失敗，請確認網址設定');
+    });
+}
+
+// ===== BATCH PRICE UPDATE =====
+function openBatchPrice(){
+  const gsUrl=localStorage.getItem(K.gs);
+  const list=E('bp-list');
+  list.innerHTML=H.map(h=>{
+    const mv=twd(h.shares*h.price,h.currency);
+    const pl=mv-twd(h.shares*h.cost,h.currency);
+    const isStock=/^[0-9]{4,5}[A-Z]?$/.test(h.code.replace(/-D$/,''));
+    const autoTag=isStock&&gsUrl
+      ?'<span style="font-size:11px;background:rgba(34,197,94,.12);color:var(--dn);padding:2px 6px;border-radius:4px;margin-left:6px">🟢 自動同步</span>'
+      :'<span style="font-size:11px;background:var(--s3);color:var(--t3);padding:2px 6px;border-radius:4px;margin-left:6px">⬜ 手動輸入</span>';
+    return`<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(30,42,61,.4)">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+          <span style="font-family:var(--mono);font-size:15px;font-weight:600;color:var(--accent)">${h.code}</span>${autoTag}
+        </div>
+        <div style="font-size:12px;color:var(--t2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.name}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:1px">損益 <span class="${pc(pl)}">${pl>=0?'+':''}${fmt(pl,0)}</span></div>
+      </div>
+      <div style="flex-shrink:0;text-align:right">
+        <input class="qp" type="number" id="bp-${h.id}" value="${h.price}" step="0.01" style="width:90px;font-size:14px;padding:6px 8px">
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">${h.currency}</div>
+      </div>
+    </div>`;
+  }).join('');
+  openM('mbp');
+}
+function saveBatchPrice(){
+  let updated=0;
+  H.forEach(h=>{
+    const inp=E('bp-'+h.id);
+    if(inp){const v=+inp.value;if(v>0&&v!==h.price){h.price=v;h.updatedAt=td();updated++;}}
+  });
+  sv(K.h,H);closeM('mbp');renderH();renderOV();
+  toast(`✅ 已更新 ${updated} 筆現價`);
+}
+function loadGSUrl(){
+  const url=localStorage.getItem(K.gs)||'';
+  S('gs-url',url);
+  const el=E('gs-status');
+  if(url&&el)el.innerHTML='<span style="color:var(--dn)">✅ 已設定</span>';
 }
 
 // INIT
