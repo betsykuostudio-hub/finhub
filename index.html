@@ -19,6 +19,35 @@
   --body:'Noto Sans TC',sans-serif;
   --r:12px;
 }
+body.light{
+  --bg:#f0f4f8;--s1:#ffffff;--s2:#f8fafc;--s3:#edf2f7;--s4:#e2e8f0;
+  --border:#d1dde9;--border2:#b8ccde;
+  --accent:#0284c7;
+  --up:#dc2626;
+  --dn:#16a34a;
+  --yellow:#d97706;--purple:#7c3aed;
+  --text:#1a2535;--t2:#4a5e78;--t3:#8fa3bc;
+}
+body.light nav{background:rgba(240,244,248,.96)!important;border-bottom-color:#d1dde9}
+body.light .modal{background:#ffffff!important}
+body.light .gsearch-overlay{background:rgba(220,228,236,.95)!important}
+body.light .gsearch-input{background:#ffffff!important}
+body.light .gsearch-section{background:#f8fafc!important}
+body.light .toast{background:#ffffff!important;color:#1a2535!important}
+body.light .hm-card{background:#ffffff!important}
+body.light .field input,body.light .field select{background:#f8fafc!important;color:#1a2535!important}
+body.light .si2{background:#ffffff!important;color:#1a2535!important}
+body.light .qp,body.light .hm-pi{background:#f8fafc!important;color:#1a2535!important}
+body.light .fx-input{background:#f0f4f8!important;color:#1a2535!important}
+body.light .prog{background:#d1dde9!important}
+body.light td{border-bottom-color:rgba(209,221,233,.6)!important}
+body.light .txgh{background:#edf2f7!important}
+body.light .txgh:hover{background:#e2e8f0!important}
+body.light .dcai{background:#f8fafc!important}
+body.light .lcard{background:#ffffff!important}
+body.light .kpi{background:#f8fafc!important}
+body.light .lk{background:#f8fafc!important}
+
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.7;min-height:100vh;overflow-x:hidden}
 nav{position:sticky;top:0;z-index:200;background:rgba(8,11,17,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
@@ -215,9 +244,58 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
     <button class="tab" onclick="goTab('invest',this)">投資</button>
     <button class="tab" onclick="goTab('loan',this)">貸款</button>
     <button class="tab" onclick="goTab('settings',this)">設定</button>
-    <button class="nav-search-btn" onclick="openGS()">🔍</button>
+    <button class="tab" onclick="goTab('help',this)">說明</button><button class="nav-search-btn" id="theme-btn" onclick="toggleTheme()" style="margin-right:4px">🌙</button><button class="nav-search-btn" onclick="openGS()">🔍</button>
   </div>
 </nav>
+
+<div class="page" id="page-help">
+  <div class="card">
+    <div class="card-head"><div class="card-title">👋 歡迎使用 fin.hub</div></div>
+    <p style="font-size:13px;color:var(--t2);line-height:1.9">fin.hub 是專為台灣投資人設計的個人財務管理工具，整合投資持倉、交易紀錄、配息追蹤、定期定額、貸款管理，所有資料儲存在你的裝置，不上傳伺服器。</p>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">📱 四個主要頁面</div></div>
+    <div class="plrow"><div><strong>總覽</strong><div style="font-size:12px;color:var(--t2)">資產總市值、損益、本月待辦、配置圖、走勢圖</div></div></div>
+    <div class="plrow"><div><strong>投資</strong><div style="font-size:12px;color:var(--t2)">持倉管理、交易紀錄、配息紀錄、定期定額</div></div></div>
+    <div class="plrow"><div><strong>貸款</strong><div style="font-size:12px;color:var(--t2)">貸款管理、攤還表、提前還款試算</div></div></div>
+    <div class="plrow"><div><strong>設定</strong><div style="font-size:12px;color:var(--t2)">Google Sheets 同步、資料備份匯出匯入</div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">💹 現價更新方式</div></div>
+    <div class="plrow"><div><strong>☁️ 同步現價</strong><div style="font-size:12px;color:var(--t2)">連結 Google Sheets，自動抓取台股 ETF 與股票現價</div></div></div>
+    <div class="plrow"><div><strong>✏️ 批次輸入</strong><div style="font-size:12px;color:var(--t2)">集中手動填入基金淨值，一次更新所有持倉</div></div></div>
+    <div class="plrow"><div><strong>表格直接修改</strong><div style="font-size:12px;color:var(--t2)">持倉表格的現價欄位可直接點擊修改單筆</div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">📋 新增持倉的兩種方式</div></div>
+    <div class="plrow"><div><strong>方式一：從交易紀錄建立（推薦）</strong><div style="font-size:12px;color:var(--t2)">投資頁 → 新增交易紀錄 → 填入買入資料 → 系統自動建立持倉並計算加權成本</div></div></div>
+    <div class="plrow"><div><strong>方式二：手動新增持倉</strong><div style="font-size:12px;color:var(--t2)">投資頁 → 持倉管理 ＋ 新增 → 手動填入股數、成本、現價</div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">🔄 定期定額代碼規則</div></div>
+    <p style="font-size:13px;color:var(--t2);line-height:1.9;margin-bottom:8px">同一標的若同時有單筆與定期定額，定期定額請在代碼後加 <strong style="color:var(--accent)">-D</strong> 區分。</p>
+    <div style="background:var(--s2);border-radius:8px;padding:10px 12px;font-size:12px;font-family:var(--mono);color:var(--t2)">
+      JA55 → 單筆持倉<br>
+      JA55-D → 定期定額持倉
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">💰 配息紀錄注意事項</div></div>
+    <div class="plrow"><div><strong>持股數自動帶入</strong><div style="font-size:12px;color:var(--t2)">輸入代碼後，持股數會自動從持倉帶入，不需手動填</div></div></div>
+    <div class="plrow"><div><strong>年化配息率</strong><div style="font-size:12px;color:var(--t2)">系統自動計算今年配息總額 ÷ 目前市值，顯示在持倉表格</div></div></div>
+    <div class="plrow"><div><strong>配息來源可能為本金</strong><div style="font-size:12px;color:var(--t2)">YT02、AZ04、JA55 等基金需注意，真實損益 = 市值 + 累積配息 − 投入本金</div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">🏦 IRR 與提前還款試算</div></div>
+    <p style="font-size:13px;color:var(--t2);line-height:1.9">IRR（內部報酬率）需要有交易紀錄才能計算，若顯示「—」代表尚未有交易紀錄。貸款頁的提前還款試算會自動比較投資 IRR 與貸款利率，建議你是否提前還款。</p>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">💾 資料備份建議</div></div>
+    <p style="font-size:13px;color:var(--t2);line-height:1.9;margin-bottom:10px">所有資料儲存在瀏覽器 localStorage，清除瀏覽器資料或換裝置前<strong style="color:var(--yellow)">務必先匯出 JSON</strong>。建議每個月備份一次，存到 iCloud 或 Google Drive。</p>
+    <button class="btn btn-p btn-sm" onclick="goTab('settings',document.querySelectorAll('.tab')[3])">前往設定頁備份</button>
+  </div>
+  <div style="text-align:center;padding:16px 0;font-size:11px;color:var(--t3)">fin.hub v4.4 ｜ 資料 100% 本機離線儲存</div>
+</div>
 
 <div class="gsearch-overlay" id="gsearch">
   <button class="gsearch-close" onclick="closeGS()">✕</button>
@@ -234,6 +312,7 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
   <div class="card"><div class="card-head"><div class="card-title">📅 本月待辦</div></div><div id="ov-todo"></div></div>
   <div class="card"><div class="card-head"><div class="card-title">資產配置</div></div><div class="pie-wrap"><canvas id="pieChart" width="120" height="120" style="flex-shrink:0"></canvas><div class="pie-legend" id="pie-legend"></div></div></div>
   <div class="card"><div class="card-head"><div class="card-title">各平台小計</div></div><div id="ov-pl"></div></div>
+  <div class="card"><div class="card-head"><div class="card-title">📈 資產走勢</div><span style="font-size:11px;color:var(--t3)">每次開啟自動記錄</span></div><canvas id="trendChart" style="width:100%;height:160px"></canvas><div id="trend-empty" style="display:none" class="empty"><p>累積2個月以上資料後顯示</p></div></div>
   <div class="card"><div class="card-head"><div class="card-title">投資報酬 vs 貸款利率</div></div><div id="ov-cmp"></div></div>
   <div class="card"><div class="card-head"><div class="card-title">貸款概況</div></div><div id="ov-ln"></div></div>
 </div>
@@ -305,7 +384,23 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
     </div>
   </div>
   <div class="card"><div class="card-head"><div class="card-title">危險區域</div></div><button class="btn btn-r" onclick="clearAll()">🗑️ 清除全部資料</button></div>
-  <div class="card"><div class="card-head"><div class="card-title">關於</div></div><p style="font-size:12px;color:var(--t2);line-height:2">fin.hub v4.2 ｜ 損益顏色：台灣習慣（🔴紅=漲/正 🟢綠=跌/負）｜ 幣別：手動匯率自動換算 TWD ｜ 資料：100% 本機離線</p></div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">🎨 顯示主題</div></div>
+    <p style="font-size:13px;color:var(--t2);margin-bottom:12px;line-height:1.8">切換深色／淺色模式，偏好會自動儲存。</p>
+    <div style="display:flex;gap:10px">
+      <div onclick="setTheme('dark')" id="th-dark" style="flex:1;border:2px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;background:var(--s2);transition:border-color .2s">
+        <div style="font-size:22px;margin-bottom:6px">🌙</div>
+        <div style="font-size:13px;font-weight:600">深色模式</div>
+        <div style="font-size:11px;color:var(--t2);margin-top:2px">預設，護眼低光源</div>
+      </div>
+      <div onclick="setTheme('light')" id="th-light" style="flex:1;border:2px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;text-align:center;background:var(--s2);transition:border-color .2s">
+        <div style="font-size:22px;margin-bottom:6px">☀️</div>
+        <div style="font-size:13px;font-weight:600">淺色模式</div>
+        <div style="font-size:11px;color:var(--t2);margin-top:2px">明亮，戶外清晰</div>
+      </div>
+    </div>
+  </div>
+  <div class="card"><div class="card-head"><div class="card-title">關於</div></div><p style="font-size:12px;color:var(--t2);line-height:2">fin.hub v4.4 ｜ 損益顏色：台灣習慣（🔴紅=漲/正 🟢綠=跌/負）｜ 幣別：手動匯率自動換算 TWD ｜ 資料：100% 本機離線</p></div>
 </div>
 
 <!-- MODALS -->
@@ -344,7 +439,7 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
 <div class="modal-bg" id="md"><div class="modal">
   <div class="modal-title" id="md-t">新增配息 <button class="mc" onclick="closeM('md')">✕</button></div>
   <div class="fg fg2">
-    <div class="field"><label>代碼</label><input id="d-code" list="cl"></div>
+    <div class="field"><label>代碼</label><input id="d-code" list="cl" oninput="prefillDiv(this.value)"></div>
     <div class="field"><label>日期</label><input type="date" id="d-date"></div>
     <div class="field"><label>每股配息（原幣）</label><input type="number" id="d-per" step="0.001" oninput="updDP()"></div>
     <div class="field"><label>持有股數</label><input type="number" id="d-sh" step="0.001" oninput="updDP()"></div>
@@ -431,7 +526,7 @@ function goTab(id,btn){
   if(id==='overview')renderOV();
   if(id==='invest'){loadFX();renderH();renderTX();renderD();renderDCA();}
   if(id==='loan'){renderL();renderPS();}
-  if(id==='settings'){renderBI();loadGSUrl();}
+  if(id==='settings'){renderBI();loadGSUrl();updThemeUI();} if(id==='help'){}
 }
 
 function openM(id){
@@ -478,6 +573,13 @@ function calcIRR(cfs){
   }
   return isFinite(r)?r*100:null;
 }
+function calcYield(h){
+  const thisYear=new Date().getFullYear().toString();
+  const annual=D.filter(d=>d.code===h.code&&d.date.startsWith(thisYear)).reduce((s,d)=>s+d.total,0);
+  const mv=twd(h.shares*h.price,h.currency);
+  if(!mv||!annual)return 0;
+  return annual/mv*100;
+}
 function getIRR(h){
   const mt=TX.filter(t=>t.code===h.code),md=D.filter(d=>d.code===h.code);
   if(!mt.length)return null;
@@ -513,6 +615,7 @@ function renderH(filter){
   const rows=data.map(h=>{
     const ct=twd(h.shares*h.cost,h.currency),mv=twd(h.shares*h.price,h.currency),pl=mv-ct,plp=ct>0?pl/ct*100:0;
     const irr=getIRR(h),ih=irr===null?`<span class="irrt irrna">—</span>`:`<span class="irrt ${irr>=0?'irrp':'irrn'}">${irr>=0?'+':''}${irr.toFixed(1)}%</span>`;
+    const yr=calcYield(h);
     return`<tr class="dr${selH===h.id?' sel':''}" onclick="selHolding('${h.id}')">
       <td class="cc">${h.code}</td><td class="nc">${h.name}${h.note?`<br><span style="font-size:10px;color:var(--t3)">${h.note}</span>`:''}</td>
       <td>${tb(h.type)}</td><td>${pb(h.platform)}</td>
@@ -521,12 +624,14 @@ function renderH(filter){
       <td style="padding:5px 4px"><input class="qp" type="number" value="${h.price}" step="0.01" onclick="event.stopPropagation()" onchange="updP('${h.id}',this.value)"></td>
       <td class="num ${pc(pl)}">${pl>=0?'+':''}${fmt(pl,0)}<br><span style="font-size:10px">${fmtp(plp)}</span></td>
       <td>${ih}</td>
+      <td class="num ${yr>0?'up':'yw'}">${yr>0?yr.toFixed(2)+'%':'—'}</td>
     </tr>`;
   }).join('');
   // 手機簡易卡片（點開看詳細）
   const cards=data.map(h=>{
     const ct=twd(h.shares*h.cost,h.currency),mv=twd(h.shares*h.price,h.currency),pl=mv-ct,plp=ct>0?pl/ct*100:0;
     const irr=getIRR(h),irrTxt=irr===null?'—':`${irr>=0?'+':''}${irr.toFixed(1)}%`;
+    const yr2=calcYield(h);
     const irrCls=irr===null?'var(--t3)':irr>=0?'var(--up)':'var(--dn)';
     const platLabel=h.platform==='yuanta'?'元大':h.platform==='firstbank'?'一銀':'其他';
     return`<div class="hm-card${selH===h.id?' open sel':''}" id="hmc-${h.id}">
@@ -548,6 +653,7 @@ function renderH(filter){
         <div class="hm-drow"><span class="hm-dl">市值(TWD)</span><span class="hm-dv ac">${fmt(mv,0)}</span></div>
         <div class="hm-drow"><span class="hm-dl">現價</span><input class="hm-pi" type="number" value="${h.price}" step="0.01" onclick="event.stopPropagation()" onchange="updP('${h.id}',this.value)"></div>
         <div class="hm-drow"><span class="hm-dl">IRR</span><span class="hm-dv" style="color:${irrCls}">${irrTxt}</span></div>
+        <div class="hm-drow"><span class="hm-dl">年化配息率</span><span class="hm-dv ${yr2>0?'up':'yw'}">${yr2>0?yr2.toFixed(2)+'%':'—'}</span></div>
         <div class="btn-row" style="margin-top:8px">
           <button class="btn btn-g btn-xs" onclick="event.stopPropagation();eHid='${h.id}';openEH()">✏️ 編輯</button>
           <button class="btn btn-r btn-xs" onclick="event.stopPropagation();selH='${h.id}';delH()">🗑️</button>
@@ -562,7 +668,7 @@ function renderH(filter){
     <th class="${sc('shares')}" onclick="srtH('shares')">股數<span class="si"></span></th>
     <th>成本</th><th>現價</th>
     <th class="${sc('pl')}" onclick="srtH('pl')">損益(TWD)<span class="si"></span></th>
-    <th>IRR</th>
+    <th>IRR</th><th>年化配息率</th>
   </tr></thead><tbody>${rows}</tbody></table></div><div class="ml">${cards}</div>`;
 }
 function srtH(c){if(hSortCol===c)hSortDir*=-1;else{hSortCol=c;hSortDir=1;}renderH();}
@@ -588,6 +694,10 @@ function openTxSel(){if(!selH)return;const h=H.find(x=>x.id===selH);if(!h)return
 
 // TRANSACTIONS
 function submitTX(){if(eTXid)saveETX();else addTX();}
+function prefillDiv(code){
+  const h=H.find(x=>x.code===code.trim());
+  if(h){S('d-sh',h.shares);updDP();}
+}
 function prefillTX(code){
   const h=H.find(x=>x.code===code.trim());
   if(h&&document.getElementById('t-cur'))document.getElementById('t-cur').value=h.currency||'TWD';
@@ -855,7 +965,7 @@ function renderOV(){
   E('ov-ki').innerHTML=`<div class="kpi"><div class="kpi-l">投資總市值(TWD)</div><div class="kpi-v ac">${fmt(tm,0)}</div><div class="kpi-sub">成本 ${fmt(tc,0)}</div></div><div class="kpi"><div class="kpi-l">總損益</div><div class="kpi-v ${pc(pl)}">${pl>=0?'+':''}${fmt(pl,0)}</div><div class="kpi-sub">${fmtp(plp)}</div></div><div class="kpi"><div class="kpi-l">今年配息</div><div class="kpi-v up">+${fmt(yd,0)}</div><div class="kpi-sub">累積${fmt(td2,0)}</div></div>`;
   const tr=L.reduce((s,l)=>s+l.remain,0),tmo=L.reduce((s,l)=>s+l.monthly,0);
   E('ov-kl').innerHTML=`<div class="kpi"><div class="kpi-l">貸款餘額</div><div class="kpi-v yw">${fmt(tr,0)}</div><div class="kpi-sub">月繳${fmt(tmo,0)}</div></div><div class="kpi"><div class="kpi-l">淨資產估算</div><div class="kpi-v ${pc(tm-tr)}">${fmt(tm-tr,0)}</div><div class="kpi-sub">投資－貸款</div></div>`;
-  renderTodo();renderPie();renderPlatforms();renderCmp();renderOvL();renderBB();
+  renderTodo();renderPie();renderPlatforms();renderCmp();renderOvL();renderBB();renderTrend();recordSnapshot();
 }
 
 function renderTodo(){
@@ -991,6 +1101,66 @@ function clearAll(){
   renderOV();renderH();renderTX();renderD();renderDCA();renderL();renderPS();toast('🗑️ 已清除');
 }
 
+// ===== TREND CHART =====
+function recordSnapshot(){
+  const key='f3snap';
+  let snaps=[];try{snaps=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}
+  const today=td();
+  const mv=H.reduce((s,h)=>s+twd(h.shares*h.price,h.currency),0);
+  if(!mv)return;
+  // Only record once per day
+  if(snaps.length&&snaps[snaps.length-1].d===today){snaps[snaps.length-1].v=mv;}
+  else snaps.push({d:today,v:mv});
+  // Keep last 12 months
+  if(snaps.length>365)snaps=snaps.slice(-365);
+  localStorage.setItem(key,JSON.stringify(snaps));
+}
+function renderTrend(){
+  const key='f3snap';
+  let snaps=[];try{snaps=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}
+  const canvas=E('trendChart'),empty=E('trend-empty');
+  if(!canvas)return;
+  // Group by month, take last value of each month
+  const byMonth={};
+  snaps.forEach(s=>{const m=s.d.slice(0,7);byMonth[m]=s.v;});
+  const months=Object.keys(byMonth).sort();
+  if(months.length<2){canvas.style.display='none';if(empty)empty.style.display='block';return;}
+  canvas.style.display='block';if(empty)empty.style.display='none';
+  const vals=months.map(m=>byMonth[m]);
+  const W=canvas.offsetWidth||320,H2=160;
+  canvas.width=W*window.devicePixelRatio;canvas.height=H2*window.devicePixelRatio;
+  canvas.style.width=W+'px';canvas.style.height=H2+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(window.devicePixelRatio,window.devicePixelRatio);
+  const pad={t:16,r:16,b:32,l:56};
+  const cw=W-pad.l-pad.r,ch=H2-pad.t-pad.b;
+  const mn=Math.min(...vals)*0.98,mx=Math.max(...vals)*1.02;
+  const xS=i=>pad.l+i/(months.length-1)*cw;
+  const yS=v=>pad.t+ch-(v-mn)/(mx-mn)*ch;
+  // Grid lines
+  ctx.strokeStyle='rgba(30,42,61,.6)';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+i*ch/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();}
+  // Y labels
+  ctx.fillStyle='#3a4a60';ctx.font=`10px JetBrains Mono,monospace`;ctx.textAlign='right';
+  for(let i=0;i<=4;i++){const v=mx-(mx-mn)*i/4;const y=pad.t+i*ch/4;ctx.fillText((v/10000).toFixed(0)+'萬',pad.l-4,y+3);}
+  // Gradient fill
+  const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
+  grad.addColorStop(0,'rgba(56,189,248,.25)');grad.addColorStop(1,'rgba(56,189,248,.01)');
+  ctx.beginPath();ctx.moveTo(xS(0),yS(vals[0]));
+  vals.forEach((v,i)=>{if(i>0)ctx.lineTo(xS(i),yS(v));});
+  ctx.lineTo(xS(vals.length-1),pad.t+ch);ctx.lineTo(xS(0),pad.t+ch);ctx.closePath();
+  ctx.fillStyle=grad;ctx.fill();
+  // Line
+  ctx.beginPath();ctx.strokeStyle='#38bdf8';ctx.lineWidth=2;ctx.lineJoin='round';
+  vals.forEach((v,i)=>{i===0?ctx.moveTo(xS(i),yS(v)):ctx.lineTo(xS(i),yS(v));});
+  ctx.stroke();
+  // Dots
+  vals.forEach((v,i)=>{ctx.beginPath();ctx.arc(xS(i),yS(v),3.5,0,Math.PI*2);ctx.fillStyle='#38bdf8';ctx.fill();});
+  // X labels (show every month if space allows)
+  ctx.fillStyle='#3a4a60';ctx.textAlign='center';ctx.font=`10px Noto Sans TC,sans-serif`;
+  const step=months.length>8?2:1;
+  months.forEach((m,i)=>{if(i%step===0)ctx.fillText(m.slice(5)+'月',xS(i),H2-8);});
+}
+
 // ===== GOOGLE SHEETS SYNC =====
 function saveGS(){
   const url=V('gs-url').trim();
@@ -1080,8 +1250,33 @@ function loadGSUrl(){
   if(url&&el)el.innerHTML='<span style="color:var(--dn)">✅ 已設定</span>';
 }
 
+// ===== THEME =====
+function setTheme(t){
+  if(t==='light'){document.body.classList.add('light');}
+  else{document.body.classList.remove('light');}
+  localStorage.setItem('f3theme',t);
+  const b=E('theme-btn');if(b)b.textContent=t==='light'?'☀️':'🌙';
+  updThemeUI();
+}
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  localStorage.setItem('f3theme',isLight?'light':'dark');
+  E('theme-btn').textContent=isLight?'☀️':'🌙';
+  updThemeUI();
+}
+function updThemeUI(){
+  const isLight=document.body.classList.contains('light');
+  const dl=E('th-dark'),ll=E('th-light');
+  if(dl)dl.style.borderColor=isLight?'var(--border)':'var(--accent)';
+  if(ll)ll.style.borderColor=isLight?'var(--accent)':'var(--border)';
+}
+function loadTheme(){
+  const t=localStorage.getItem('f3theme');
+  if(t==='light'){document.body.classList.add('light');const b=E('theme-btn');if(b)b.textContent='☀️';}
+}
+
 // INIT
-loadFX();renderOV();renderPS();
+loadTheme();loadFX();renderOV();renderPS();
 </script>
 </body>
 </html>
