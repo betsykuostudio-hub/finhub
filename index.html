@@ -294,7 +294,7 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
     <p style="font-size:13px;color:var(--t2);line-height:1.9;margin-bottom:10px">所有資料儲存在瀏覽器 localStorage，清除瀏覽器資料或換裝置前<strong style="color:var(--yellow)">務必先匯出 JSON</strong>。建議每個月備份一次，存到 iCloud 或 Google Drive。</p>
     <button class="btn btn-p btn-sm" onclick="goTab('settings',document.querySelectorAll('.tab')[3])">前往設定頁備份</button>
   </div>
-  <div style="text-align:center;padding:16px 0;font-size:11px;color:var(--t3)">fin.hub v4.4 ｜ 資料 100% 本機離線儲存</div>
+  <div style="text-align:center;padding:16px 0;font-size:11px;color:var(--t3)">fin.hub v4.5 ｜ 資料 100% 本機離線儲存</div>
 </div>
 
 <div class="gsearch-overlay" id="gsearch">
@@ -400,7 +400,7 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
       </div>
     </div>
   </div>
-  <div class="card"><div class="card-head"><div class="card-title">關於</div></div><p style="font-size:12px;color:var(--t2);line-height:2">fin.hub v4.4 ｜ 損益顏色：台灣習慣（🔴紅=漲/正 🟢綠=跌/負）｜ 幣別：手動匯率自動換算 TWD ｜ 資料：100% 本機離線</p></div>
+  <div class="card"><div class="card-head"><div class="card-title">關於</div></div><p style="font-size:12px;color:var(--t2);line-height:2">fin.hub v4.5 ｜ 損益顏色：台灣習慣（🔴紅=漲/正 🟢綠=跌/負）｜ 幣別：手動匯率自動換算 TWD ｜ 資料：100% 本機離線</p></div>
 </div>
 
 <!-- MODALS -->
@@ -422,14 +422,14 @@ tr.dr.sel td{background:rgba(56,189,248,.07)}
 
 <div class="modal-bg" id="mt"><div class="modal">
   <div class="modal-title" id="mt-t">新增交易紀錄 <button class="mc" onclick="closeM('mt')">✕</button></div>
-  <div style="font-size:11px;color:var(--accent);background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.15);border-radius:7px;padding:6px 10px;margin-bottom:10px">💡 新增後自動更新持倉股數與加權成本</div>
+  <div style="font-size:11px;color:var(--accent);background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.15);border-radius:7px;padding:6px 10px;margin-bottom:10px">💡 新增後自動更新持倉股數與加權成本｜手續費請填台幣金額</div>
   <div class="fg fg2">
     <div class="field"><label>代碼</label><input id="t-code" list="cl" oninput="prefillTX(this.value)"></div>
     <div class="field"><label>類型</label><select id="t-type"><option value="buy">買入</option><option value="sell">賣出</option></select></div>
     <div class="field"><label>日期</label><input type="date" id="t-date"></div>
     <div class="field"><label>股數</label><input type="number" id="t-sh" step="0.001"></div>
     <div class="field"><label>成交價（原幣）</label><input type="number" id="t-price" step="0.01"></div>
-    <div class="field"><label>手續費＋稅</label><input type="number" id="t-fee" placeholder="0"></div>
+    <div class="field"><label>手續費＋稅 <span style="color:var(--accent);font-size:11px">(台幣 TWD)</span></label><input type="number" id="t-fee" placeholder="0"></div>
     <div class="field"><label>幣別</label><select id="t-cur"><option value="TWD">TWD</option><option value="USD">USD</option><option value="HKD">HKD</option><option value="JPY">JPY</option><option value="EUR">EUR</option></select></div>
     <div class="field ff"><label>備註</label><input id="t-note"></div>
   </div>
@@ -703,19 +703,24 @@ function prefillTX(code){
   if(h&&document.getElementById('t-cur'))document.getElementById('t-cur').value=h.currency||'TWD';
 }
 function syncHolding(code,type,shares,price,fee,currency){
+  // fee is always in TWD, convert to holding currency for cost calc
+  const fxRate={TWD:1,USD:FX.usd,JPY:FX.jpy,HKD:FX.hkd,EUR:FX.eur};
+  const cur=currency||'TWD';
+  const feeInCur=(fee||0)/(fxRate[cur]||1); // convert TWD fee to holding currency
   const idx=H.findIndex(x=>x.code===code);
   if(idx<0){
     // 自動建立新持倉
+    const initCost=shares>0?(shares*price+feeInCur)/shares:price;
     H.push({id:uid(),code,name:code,type:'stock',platform:'other',
       shares:type==='buy'?shares:0,
-      cost:type==='buy'?price:0,
-      price,currency:currency||'TWD',note:'由交易紀錄自動建立',updatedAt:td()});
+      cost:type==='buy'?initCost:0,
+      price,currency:cur,note:'由交易紀錄自動建立',updatedAt:td()});
     toast('📋 已自動建立持倉：'+code);
   } else {
     const h=H[idx];
     if(type==='buy'){
       const oldVal=h.shares*h.cost;
-      const addVal=shares*price+(fee||0);
+      const addVal=shares*price+feeInCur;
       const newShares=h.shares+shares;
       h.cost=newShares>0?(oldVal+addVal)/newShares:0;
       h.shares=newShares;
@@ -729,7 +734,7 @@ function syncHolding(code,type,shares,price,fee,currency){
 function addTX(){
   const code=V('t-code').trim();if(!code){toast('請輸入代碼');return;}
   const type=V('t-type'),shares=+V('t-sh')||0,price=+V('t-price')||0,fee=+V('t-fee')||0;
-  TX.push({id:uid(),code,type,date:V('t-date'),shares,price,fee,note:V('t-note')});
+  TX.push({id:uid(),code,type,date:V('t-date'),shares,price,fee,currency:V('t-cur')||'TWD',note:V('t-note')});
   TX.sort((a,b)=>b.date.localeCompare(a.date));sv(K.tx,TX);
   // 自動同步持倉
   const txCur=V('t-cur')||'TWD';
@@ -740,17 +745,22 @@ function addTX(){
 }
 function openETX(id){
   const t=TX.find(x=>x.id===id);if(!t)return;eTXid=id;
-  S('t-code',t.code);E('t-type').value=t.type;S('t-date',t.date);S('t-sh',t.shares);S('t-price',t.price);S('t-fee',t.fee||0);S('t-note',t.note||'');
+  S('t-code',t.code);E('t-type').value=t.type;S('t-date',t.date);S('t-sh',t.shares);S('t-price',t.price);S('t-fee',t.fee||0);S('t-note',t.note||'');if(E('t-cur'))E('t-cur').value=t.currency||'TWD';
   E('mt-t').innerHTML='編輯交易紀錄 <button class="mc" onclick="closeM(\'mt\')">✕</button>';E('t-btn').textContent='儲存';openM('mt');
 }
 function recalcHoldingFromTX(code){
-  // 從所有交易紀錄重新計算持倉
+  // 從所有交易紀錄重新計算持倉（手續費為台幣，需換算）
   const trades=TX.filter(t=>t.code===code).slice().sort((a,b)=>a.date.localeCompare(b.date));
   if(!trades.length)return;
+  const hRef=H.find(x=>x.code===code);
+  const cur=(hRef?.currency)||'TWD';
+  const fxRate={TWD:1,USD:FX.usd,JPY:FX.jpy,HKD:FX.hkd,EUR:FX.eur};
+  const fxR=fxRate[cur]||1;
   let sh=0,cost=0;
   for(const t of trades){
     if(t.type==='buy'){
-      const oldVal=sh*cost,addVal=t.shares*t.price+(t.fee||0);
+      const feeInCur=(t.fee||0)/fxR;
+      const oldVal=sh*cost,addVal=t.shares*t.price+feeInCur;
       sh+=t.shares;cost=sh>0?(oldVal+addVal)/sh:0;
     } else {
       sh=Math.max(0,sh-t.shares);
@@ -763,7 +773,7 @@ function recalcHoldingFromTX(code){
 function saveETX(){
   const idx=TX.findIndex(x=>x.id===eTXid);if(idx<0)return;
   const oldCode=TX[idx].code;
-  TX[idx]={...TX[idx],code:V('t-code').trim(),type:V('t-type'),date:V('t-date'),shares:+V('t-sh')||0,price:+V('t-price')||0,fee:+V('t-fee')||0,note:V('t-note')};
+  TX[idx]={...TX[idx],code:V('t-code').trim(),type:V('t-type'),date:V('t-date'),shares:+V('t-sh')||0,price:+V('t-price')||0,fee:+V('t-fee')||0,currency:V('t-cur')||'TWD',note:V('t-note')};
   TX.sort((a,b)=>b.date.localeCompare(a.date));sv(K.tx,TX);
   recalcHoldingFromTX(TX[idx].code);
   if(oldCode!==TX[idx].code)recalcHoldingFromTX(oldCode);
@@ -786,7 +796,7 @@ function renderTX(filter){
       <div><span class="tt ${t.type==='buy'?'tb':'ts'}">${t.type==='buy'?'買入':'賣出'}</span><span style="font-size:11px;color:var(--t2);margin-left:6px">${t.date}${t.note?` · ${t.note}`:''}</span>
       <div style="font-size:11px;color:var(--t3)">${fmt(t.shares,3)} 股 × ${fmt(t.price,2)}${t.fee?` + 費${fmt(t.fee,0)}`:''}</div></div>
       <div style="display:flex;align-items:center;gap:5px">
-        <span class="num ${t.type==='buy'?'up':'dn'}">${t.type==='buy'?'-':'+'}${fmt(t.shares*t.price,0)}</span>
+        <span class="num ${t.type==='buy'?'up':'dn'}">${t.type==='buy'?'-':'+'}${fmt(t.shares*t.price,2)} ${t.currency||''}</span>
         <button class="btn btn-g btn-xs" onclick="event.stopPropagation();openETX('${t.id}')">✏️</button>
         <button class="btn btn-r btn-xs" onclick="event.stopPropagation();delTX('${t.id}')">×</button>
       </div>
@@ -1067,7 +1077,7 @@ function doGS(q){
   if(!mh.length&&!mt.length&&!md.length&&!mdc.length){el.innerHTML='<div class="gsearch-empty">找不到相關資料</div>';return;}
   let html='';
   if(mh.length){html+=`<div class="gsearch-section"><div class="gsearch-section-title">持倉 (${mh.length})</div>`;html+=mh.map(h=>{const mv=twd(h.shares*h.price,h.currency),ct=twd(h.shares*h.cost,h.currency),pl=mv-ct,plp=ct>0?pl/ct*100:0;return`<div class="dvi"><div><span class="cc">${h.code}</span> <span style="font-size:12px;color:var(--t2)">${h.name}</span><div style="font-size:11px;color:var(--t3)">${tl(h.type)} · ${fmt(h.shares,3)} 股 · 市值 ${fmt(mv,0)} TWD</div></div><div class="num ${pc(pl)}">${pl>=0?'+':''}${fmt(pl,0)}<br><span style="font-size:10px">${fmtp(plp)}</span></div></div>`;}).join('');html+='</div>';}
-  if(mt.length){html+=`<div class="gsearch-section"><div class="gsearch-section-title">交易紀錄 (${mt.length})</div>`;html+=mt.slice(0,10).map(t=>`<div class="txi"><div><span class="tt ${t.type==='buy'?'tb':'ts'}">${t.type==='buy'?'買入':'賣出'}</span> <span class="cc" style="font-size:12px">${t.code}</span><div style="font-size:11px;color:var(--t3)">${t.date} · ${fmt(t.shares,3)} × ${fmt(t.price,2)}</div></div><span class="num ${t.type==='buy'?'up':'dn'}">${t.type==='buy'?'-':'+'}${fmt(t.shares*t.price,0)}</span></div>`).join('');html+='</div>';}
+  if(mt.length){html+=`<div class="gsearch-section"><div class="gsearch-section-title">交易紀錄 (${mt.length})</div>`;html+=mt.slice(0,10).map(t=>`<div class="txi"><div><span class="tt ${t.type==='buy'?'tb':'ts'}">${t.type==='buy'?'買入':'賣出'}</span> <span class="cc" style="font-size:12px">${t.code}</span><div style="font-size:11px;color:var(--t3)">${t.date} · ${fmt(t.shares,3)} × ${fmt(t.price,2)}</div></div><span class="num ${t.type==='buy'?'up':'dn'}">${t.type==='buy'?'-':'+'}${fmt(t.shares*t.price,2)} ${t.currency||''}</span></div>`).join('');html+='</div>';}
   if(md.length){html+=`<div class="gsearch-section"><div class="gsearch-section-title">配息 (${md.length})</div>`;html+=md.slice(0,5).map(dv=>`<div class="dvi"><div><span class="cc" style="font-size:12px">${dv.code}</span><div style="font-size:11px;color:var(--t3)">${dv.date} · ${fmt(dv.shares,3)} 股</div></div><span class="num up">+${fmt(dv.total,2)}</span></div>`).join('');html+='</div>';}
   if(mdc.length){html+=`<div class="gsearch-section"><div class="gsearch-section-title">定期定額 (${mdc.length})</div>`;html+=mdc.map(d=>`<div class="dvi"><div><span class="cc" style="font-size:12px">${d.code}</span><div style="font-size:11px;color:var(--t3)">${FL[d.freq]} 第${d.day}日 · 每期${fmt(d.amount,0)} · 下次${nextDCA(d.freq,d.day)}</div></div><span class="num" style="color:var(--t2)">${d.n}期</span></div>`).join('');html+='</div>';}
   el.innerHTML=html;
